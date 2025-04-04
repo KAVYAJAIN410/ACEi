@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VR Display</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        #scene {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .moving-object {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+        }
+        #moving-object1 {
+            left: calc(25vw - 100px);
+            top: calc(50vh - 100px);
+        }
+        #moving-object2 {
+            left: calc(75vw - 100px);
+            top: calc(50vh - 100px);
+        }
+        . .center-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: yellow;
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* Centers the point on the object */
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const Imagea1 = "{{ url_for('static', filename='images/lion.png') }}";
+        const Imagea2 = "{{ url_for('static', filename='images/cage.png') }}";
+        const Imageb1 = "{{ url_for('static', filename='images/rabbit.png') }}";
+        const Imageb2 = "{{ url_for('static', filename='images/flow.png') }}";
+        const Imagec1 = "{{ url_for('static', filename='images/swing1.png') }}";
+        const Imagec2 = "{{ url_for('static', filename='images/swing2.png') }}";
+    </script>
+</head>
+<body>
+    <div id="scene">
+        <img id="moving-object1" class="moving-object" src="{{ url_for('static', filename='images/lion.png') }}" />
+        <img id="moving-object2" class="moving-object" src="{{ url_for('static', filename='images/cage.png') }}" />
+    </div>
+
+    <script>
+        var socket = io.connect('http://' + window.location.hostname + ':5000');
+        var object1 = document.getElementById('moving-object1');
+        var object2 = document.getElementById('moving-object2');
+
+        // Function to convert mm to px
+        function mmToPx(mm) {
+            return 15.87*mm/3  // Convert inches to pixels
+        }
+        
+        // Listen for distance update and adjust objects
+        socket.on('set_distance', function(data) {
+            var distance = data.distance; // Distance in mm
+            if (distance !== undefined) {
+                var distanceInPx = mmToPx(distance); // Convert distance from mm to pixels
+
+                // Calculate new positions for both objects based on the distance
+                var object1Position = `calc(50vw - ${distanceInPx / 2}px - 100px)`;
+                var object2Position = `calc(50vw + ${distanceInPx / 2}px - 100px)`;
+
+                // Update positions of the objects
+                object1.style.left = object1Position;
+                object2.style.left = object2Position;
+            }
+        });
+        function moveObjects(direction) {
+            const moveAmount = 10; // Movement step in pixels
+
+            if (direction === 'left') {
+                object1.x -= moveAmount;
+                object2.x += moveAmount;
+            } else if (direction === 'right') {
+                object1.x += moveAmount;
+                object2.x -= moveAmount;
+            } else if (direction === 'up') {
+                object1.y -= moveAmount;
+                object2.y += moveAmount;
+            } else if (direction === 'down') {
+                object1.y += moveAmount;
+                object2.y -= moveAmount;
+            }
+
+            drawObjects();
+        }
+
+        // Listen for movement commands and log to console
+       // Listen for movement commands
+       socket.on('move_object', function(data) {
+        moveObjects(data.direction);
+    });
+    socket.on('slide1', function(data) {
+        let object1 = document.getElementById('moving-object1');
+        let object2 = document.getElementById('moving-object2');
+    
+        // Predefined image sources
+        object1.setAttribute('src', Imagea1);
+        object2.setAttribute('src', Imagea2);
+        
+    });
+    socket.on('slide2', function(data) {
+        let object1 = document.getElementById('moving-object1');
+        let object2 = document.getElementById('moving-object2');
+    
+        // Predefined image sources
+        object1.setAttribute('src', Imageb1);
+        object2.setAttribute('src', Imageb2);
+        
+    });
+    socket.on('slide3', function(data) {
+        let object1 = document.getElementById('moving-object1');
+        let object2 = document.getElementById('moving-object2');
+    
+        // Predefined image sources
+        object1.setAttribute('src', Imagec1);
+        object2.setAttribute('src', Imagec2);
+        
+    });
+    socket.on('move_object', function(data) {
+        moveObjects(data.direction);
+    });
+    socket.on('move_object', function(data) {
+        moveObjects(data.direction);
+    });
+   // Listen for movement commands
+   let flickerFrequency = 200; // Frequency in milliseconds (adjust as needed)
+   let flickerActive = false; // Track whether flickering is active
+   let flickerInterval; // Store the interval ID for controlling flickering
+   
+   socket.on('remove', function (data) {
+       let a = document.getElementById('moving-object1');
+       let b = document.getElementById('moving-object2');
+   
+       if (!flickerActive) {
+           // Start flickering
+           if(!isNaN(data.freq)){
+           flickerFrequency=data.freq
+           }
+           flickerActive = true;
+           flickerInterval = setInterval(() => {
+               // Toggle visibility of moving-object1
+               a.style.display = (a.style.display === 'none' || a.style.display === '') ? 'block' : 'none';
+   
+               // Toggle visibility of moving-object2
+               b.style.display = (b.style.display === 'none' || b.style.display === '') ? 'block' : 'none';
+           }, flickerFrequency);
+       } else {
+           // Stop flickering
+           flickerActive = false;
+           clearInterval(flickerInterval);
+   
+           // Ensure both objects are visible after stopping flickering
+           a.style.display = 'block';
+           b.style.display = 'block';
+       }
+   });
+
+    // Function to enter fullscreen mode
+    function enterFullScreen() {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen();
+        } else if (document.documentElement.mozRequestFullScreen) { // Firefox
+            document.documentElement.mozRequestFullScreen();
+        } else if (document.documentElement.webkitRequestFullscreen) { // Chrome, Safari, Opera
+            document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) { // IE/Edge
+            document.documentElement.msRequestFullscreen();
+        }
+    }
+
+    // Handle orientation change
+    function handleOrientationChange() {
+        if (window.innerWidth > window.innerHeight) {
+            enterFullScreen();
+        }
+    }
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    handleOrientationChange();
+
+    // Trigger fullscreen on first touch
+    window.addEventListener('touchstart', () => enterFullScreen());
+
+    // Initial draw
+    drawObjects();
+    </script>
+</body>
+</html>

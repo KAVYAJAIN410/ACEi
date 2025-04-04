@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eye Checkup Control Panel</title>
+    <style>
+        /* Reset default margins and padding */
+        body, h1, p, button, input, label {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+        }
+
+        #controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 380px;
+            max-width: 100%;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #00796b;
+            margin-bottom: 25px;
+            font-weight: 600;
+        }
+
+        .control-label {
+            font-size: 14px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            text-align: left;
+            width: 100%;
+        }
+
+        .control-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 18px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fafafa;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-input:focus {
+            border-color: #00796b;
+            outline: none;
+        }
+
+        .control-button {
+            width: 100%;
+            padding: 14px 20px;
+            margin: 10px 0;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .control-button:hover {
+            background-color: #004d40;
+            transform: scale(1.05);
+        }
+
+        .control-button:active {
+            transform: scale(0.98);
+        }
+
+        #angle {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e0f7fa;
+            color: #00796b;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            text-align: center;
+            width: 100%;
+            border: 1px solid #00796b;
+        }
+
+        /* Make the layout more responsive */
+        @media (max-width: 600px) {
+            #controls {
+                padding: 25px 15px;
+                width: 90%;
+            }
+
+            .control-input, .control-button {
+                font-size: 14px;
+            }
+
+            #angle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h1>Eye Checkup Control Panel</h1>
+
+        <label for="ipd" class="control-label">Enter IPD (in mm):</label>
+        <input type="number" id="ipd" class="control-input" placeholder="Enter IPD in mm" />
+
+        <label for="distanceInput" class="control-label">Enter Distance (in mm):</label>
+        <input type="number" id="distanceInput" class="control-input" placeholder="Enter Distance in mm" />
+
+        <label for="freq" class="control-label">Flicker Frequency:</label>
+        <input type="number" id="freq" class="control-input" placeholder="Enter Flicker Frequency" />
+
+        <button class="control-button" id="setDistance">Set Distance</button>
+        <button class="control-button" id="remove">Remove</button>
+        <button class="control-button" id="slide1">Slide 1</button>
+        <button class="control-button" id="slide2">Slide 2</button>
+        <button class="control-button" id="slide3">Slide 3</button>
+
+        <div id="angle">Angle of Deviation: --</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io.connect('http://' + window.location.hostname + ':5000');
+
+        // Control Button Event Listeners
+        document.getElementById('remove').addEventListener('click', function() {
+            let freq = parseInt(document.getElementById('freq').value, 10);
+            socket.emit('remove', { Frequency: freq });
+        });
+
+        document.getElementById('slide1').addEventListener('click', function() {
+            socket.emit('slide1');
+        });
+
+        document.getElementById('slide2').addEventListener('click', function() {
+            socket.emit('slide2');
+        });
+
+        document.getElementById('slide3').addEventListener('click', function() {
+            socket.emit('slide3');
+        });
+
+        // Set Distance Input Event Listener
+        document.getElementById('setDistance').addEventListener('click', function() {
+            var distance = parseInt(document.getElementById('distanceInput').value, 10);
+            var ipd = parseInt(document.getElementById('ipd').value, 10);
+            let angleElement = document.getElementById("angle");
+
+            if (!isNaN(ipd) && !isNaN(distance)) {
+                let radians = Math.atan(Math.abs(distance - ipd) / 50); // Use Math.abs
+                let degrees = radians * (180 / Math.PI);
+                angleElement.innerText = `Angle of Deviation: ${(degrees * 1.75)} pd`;
+                socket.emit('set_distance', { distance: distance });
+            } else {
+                angleElement.innerText = "Please enter valid IPD and Distance";
+            }
+        });
+    </script>
+</body>
+</html>
