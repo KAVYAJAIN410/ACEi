@@ -62,15 +62,20 @@ In ACEi:
 
       python app.py
       
--##🌐Application Routes
--Route	  Description
--/	      Controller interface (used by the operator on laptop)
--/vr	    VR interface (to be opened on mobile inside VR headset)
+## 🌐 Application Routes
+
+| Route  | Description                                      |
+|--------|--------------------------------------------------|
+| `/`    | Controller interface (used by the operator on laptop) |
+| `/vr`  | VR interface (to be opened on mobile inside VR headset) |
+
       
--🧪 Demo Use Case
--👁 A patient wears a basic VR headset and looks at the /vr route on their phone.
--💻 The operator uses their laptop to go to / and move images until the patient confirms the lion is inside the cage.
--📏 The measured displacement is used to compute ocular misalignment.
+## 🧪 Demo Use Case
+
+- 👁 A patient wears a basic VR headset and looks at the `/vr` route on their phone.  
+- 💻 The operator uses their laptop to go to `/` and move images until the patient confirms the lion is inside the cage.  
+- 📏 The measured displacement is used to compute ocular misalignment.
+
 
 MIT License © 2025 Kavya Jain
     
